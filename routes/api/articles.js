@@ -1,6 +1,7 @@
 var router = require('express').Router();
 var mongoose = require('mongoose');
 var Article = mongoose.model('Article');
+var History = mongoose.model('History');
 var Comment = mongoose.model('Comment');
 var User = mongoose.model('User');
 var auth = require('../auth');
@@ -129,11 +130,15 @@ router.post('/', auth.required, function(req, res, next) {
     var article = new Article(req.body.article);
 
     article.author = user;
-
-    return article.save().then(function(){
-      console.log(article.author);
-      return res.json({article: article.toJSONFor(user)});
-    });
+    var history = new History();
+    history.type = "Create";
+    history.from = {};
+    history.to = article;
+    return history.save().then(function() {
+      return article.save().then(function(){
+        console.log(article.author);
+        return res.json({article: article.toJSONFor(user)});
+      })});
   }).catch(next);
 });
 
@@ -169,8 +174,15 @@ router.put('/:article', auth.required, function(req, res, next) {
         req.article.tagList = req.body.article.tagList
       }
 
-      req.article.save().then(function(article){
-        return res.json({article: article.toJSONFor(user)});
+      Article.findOne({ slug: req.article.slug}).then(function(prevArticle){
+        var history = new History();
+        history.type = "Update";
+        history.from = prevArticle;
+        history.to = req.article;
+        return history.save().then(function(){
+          return req.article.save().then(function(article){
+            return res.json({article: article.toJSONFor(user)});
+          })});
       }).catch(next);
     } else {
       return res.sendStatus(403);
@@ -184,9 +196,14 @@ router.delete('/:article', auth.required, function(req, res, next) {
     if (!user) { return res.sendStatus(401); }
 
     if(req.article.author._id.toString() === req.payload.id.toString()){
-      return req.article.remove().then(function(){
-        return res.sendStatus(204);
-      });
+      var history = new History();
+      history.type = "Delete";
+      history.from = req.article;
+      history.to = {};
+      return history.save().then(function() {
+        return req.article.remove().then(function(){
+          return res.sendStatus(204);
+        })});
     } else {
       return res.sendStatus(403);
     }
