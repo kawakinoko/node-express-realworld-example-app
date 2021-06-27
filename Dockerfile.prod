@@ -1,0 +1,6 @@
+FROM alpine
+WORKDIR /app
+RUN apk update && apk add npm
+COPY . ./
+RUN npm install
+CMD ["npm", "run-script", "start"]
