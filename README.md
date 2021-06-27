@@ -19,6 +19,49 @@ To get the Node server running locally:
 
 Alternately, to quickly try out this repo in the cloud, you can [![Remix on Glitch](https://cdn.glitch.com/2703baf2-b643-4da7-ab91-7ee2a2d00b5b%2Fremix-button.svg)](https://glitch.com/edit/#!/remix/realworld)
 
+### Dockerize the project
+#### Dev Environment
+Run following command in git directory.
+```bash
+$ docker build -t realworld-backend:dev . -f Dockerfile
+```
+#### Prod Environment
+Run following command in git directory.
+```bash
+$ docker build -t realworld-backend . -f Dockerfile.prod
+```
+### Run Dockerized image
+#### Dev Environment
+1. Using docker command
+```bash
+$  docker run -p <Port to expose>:3000 realworld-backend:dev
+```
+2. Using docker-compose 
+   
+Please refer https://github.com/kawakinoko/realworld-dep
+```bash
+$  git clone https://github.com/kawakinoko/realworld-dep.git
+$  cd realworld-dep
+$  docker-compose up mongo realworld-be
+```
+#### Prod Environment
+1. Using docker command
+
+You need to input `mongodb_uri` and `secret`
+```bash
+$  docker run -p <Port to expose>:3000 -e NODE_ENV=production -e MONGODB_URI=<mongodb_uri> -e SECRET=<secret> realworld-backend
+```
+2. Using docker-compose
+
+Please refer https://github.com/kawakinoko/realworld-dep
+
+You can change `MONGODB_URI` and `SECRET` using docker-compose.prod.yaml
+```bash
+$  git clone https://github.com/kawakinoko/realworld-dep.git
+$  cd realworld-dep
+$  docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up mongo realworld-be
+```
+
 # Code Overview
 
 ## Dependencies
